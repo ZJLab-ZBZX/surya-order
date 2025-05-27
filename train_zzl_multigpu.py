@@ -305,7 +305,7 @@ def main():
         # max_steps=max_steps,
         dataloader_num_workers=args.dataloader_num_workers
     )
-    print(f"训练参数:{training_args}，训练数据集数量:{train_file_lines}")
+    print(f"训练参数:{training_args}")
     trainer = ReadingOrderTrainer(
         model=model,
         args=training_args,
