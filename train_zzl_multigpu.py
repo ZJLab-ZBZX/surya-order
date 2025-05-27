@@ -231,7 +231,7 @@ def parse_args():
     parser.add_argument("--eval_order_dir", type=str,help="评估顺序标注目录")
     
     # 训练参数
-    parser.add_argument("--num_train_epochs", type=int, default=10, help="训练epoch数")
+    parser.add_argument("--num_train_epochs", type=int, default=30, help="训练epoch数")
     parser.add_argument("--train_batch_size", type=int, default=10, help="训练批次大小")
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="学习率")
     parser.add_argument("--output_dir", type=str, required=True, help="输出目录")
@@ -301,6 +301,7 @@ def main():
         max_steps=max_steps,
         dataloader_num_workers=args.dataloader_num_workers
     )
+    print(f"训练参数:{training_args}，训练数据集数量:{train_file_lines}")
     trainer = ReadingOrderTrainer(
         model=model,
         args=training_args,
