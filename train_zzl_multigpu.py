@@ -246,8 +246,10 @@ def parse_args():
 def main():
     args = parse_args()
     print(f"checkpoint:{args.checkpoint}")
-    if os.path.exists(args.checkpoint):
-        print(f"文件夹 '{args.checkpoint}' 存在")
+    if os.path.exists("/mnt/si001713netl"):
+        print(f"文件夹/mnt/si001713netl 存在")
+    else:
+        print(f"文件夹/mnt/si001713netl 不存在")
     if os.path.isdir(args.checkpoint):
         # 获取所有条目名称（不包含完整路径）
         entries = os.listdir(args.checkpoint)
