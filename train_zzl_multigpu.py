@@ -214,66 +214,6 @@ def load_model_and_processor(checkpoint,device,dtype,box_size,max_tokens):
 
 
 
-# def main():
-#     checkpoint = '/root/surya/temp/surya_deng/models/vikp/surya_order'
-#     box_size = 1024
-#     max_tokens = 256
-#     train_image_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets"
-#     train_bbox_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets"
-#     train_order_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets"
-#     eval_image_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets_eval"
-#     eval_bbox_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets_eval"
-#     eval_order_dir = "/root/surya/temp/surya_deng/pichulipaixu/datasets_eval"
-#     num_train_epochs = 10
-#     train_batch_size = 2
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     # dtype = settings.MODEL_DTYPE
-#     dtype = torch.float32
-#     print(f"使用的设备: {device}")
-#     model, processor = load_model_and_processor(checkpoint = checkpoint,device = device,dtype = dtype,box_size = box_size,max_tokens = max_tokens)
-    
-#     train_dataset = ReadingOrderDataset(image_dir = train_image_dir, bbox_dir = train_bbox_dir, order_dir = train_order_dir)
-#     eval_dataset = ReadingOrderDataset(image_dir = eval_image_dir, bbox_dir = eval_bbox_dir, order_dir = eval_order_dir)
-
-#     train_file_lines = len(train_dataset)
-
-#     # 计算整体迭代步数max_steps
-#     total_training_samples = train_file_lines * num_train_epochs
-#     total_batch_size = train_batch_size * int(os.environ.get('WORLD_SIZE'))
-#     max_steps = math.ceil(total_training_samples / total_batch_size)
-#     # 构造TrainingArguments
-#     training_args = TrainingArguments(
-#         output_dir="/root/surya/temp/surya_deng/pichulipaixu/results_zzl",
-#         per_device_train_batch_size=train_batch_size,
-#         per_device_eval_batch_size=2,
-#         do_train=True,
-#         do_eval=True,
-#         evaluation_strategy="steps",
-#         logging_steps=1,
-#         eval_steps=1,
-#         save_steps=1,
-#         overwrite_output_dir=True,
-#         save_total_limit=1,
-#         local_rank=int(os.environ.get('LOCAL_RANK', -1)),
-#         learning_rate=1E-5,
-#         metric_for_best_model='eval_loss',
-#         fp16=True,
-#         max_steps=max_steps,
-#         dataloader_num_workers=64)
-
-    
-#     trainer = ReadingOrderTrainer(
-#         model=model,
-#         args=training_args,
-#         data_collator= ReadingOrderDataCollator(processor=processor,model_dtype=dtype),
-#         train_dataset=train_dataset,
-#         eval_dataset=eval_dataset
-#     )
-
-#     trainer.train()
-
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description="训练阅读顺序模型")
     
