@@ -245,25 +245,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(f"checkpoint:{args.checkpoint}")
-    if os.path.exists("/mnt/si001713netl/suryaorder"):
-        print(f"文件夹/mnt/si001713netl/suryaorder 存在")
-    else:
-        print(f"文件夹/mnt/si001713netl/suryaorder 不存在")
-    if os.path.exists("/mnt/si001713netl/suryaorder/models"):
-        print(f"文件夹/mnt/si001713netl/suryaorder/models 存在")
-    else:
-        print(f"文件夹/mnt/si001713netl/suryaorder/models 不存在")
-    if os.path.exists("/mnt/si001713netl/suryaorder/models/surya_order"):
-        print(f"文件夹/mnt/si001713netl/suryaorder/models/surya_order 存在")
-    else:
-        print(f"文件夹/mnt/si001713netl/suryaorder/models/surya_order 不存在")
-    if os.path.isdir(args.checkpoint):
-        # 获取所有条目名称（不包含完整路径）
-        entries = os.listdir(args.checkpoint)
-        print(f"文件夹 '{args.checkpoint}' 下的内容：\n{entries}")
-    else:
-        print("文件夹不是目录")
+
     # 设备设置
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float32
@@ -315,7 +297,7 @@ def main():
         local_rank=int(os.environ.get("LOCAL_RANK", -1)),
         learning_rate=args.learning_rate,
         metric_for_best_model="eval_loss",
-        fp16=args.fp16,
+        fp16=True,
         max_steps=max_steps,
         dataloader_num_workers=args.dataloader_num_workers
     )
