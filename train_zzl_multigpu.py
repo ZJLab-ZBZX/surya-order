@@ -245,6 +245,15 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(f"checkpoint:{args.checkpoint}")
+    if os.path.exists(args.checkpoint):
+        print(f"文件夹 '{args.checkpoint}' 存在")
+    if os.path.isdir(args.checkpoint):
+        # 获取所有条目名称（不包含完整路径）
+        entries = os.listdir(args.checkpoint)
+        print(f"文件夹 '{args.checkpoint}' 下的内容：\n{entries}")
+    else:
+        print("文件夹不是目录")
     # 设备设置
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float32
