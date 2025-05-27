@@ -232,6 +232,7 @@ def parse_args():
     
     # 训练参数
     parser.add_argument("--num_train_epochs", type=int, default=30, help="训练epoch数")
+    # parser.add_argument("--eval_steps", type=int, default=10, help="评估步数")
     parser.add_argument("--train_batch_size", type=int, default=10, help="训练批次大小")
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="学习率")
     parser.add_argument("--output_dir", type=str, required=True, help="输出目录")
@@ -278,12 +279,12 @@ def main():
     )
 
     # 计算训练参数
-    train_file_lines = len(train_dataset)
-    total_training_samples = train_file_lines * args.num_train_epochs
-    total_batch_size = args.train_batch_size * int(os.environ.get("WORLD_SIZE", 1))
-    max_steps = math.ceil(total_training_samples / total_batch_size)
-    print(f"total_training_samples:{total_training_samples},total_batch_size:{total_batch_size},max_steps:{max_steps}, args.num_train_epochs:{args.num_train_epochs}")
-    print(int(os.environ.get("WORLD_SIZE", 1)))
+    # train_file_lines = len(train_dataset)
+    # total_training_samples = train_file_lines * args.num_train_epochs
+    # total_batch_size = args.train_batch_size * int(os.environ.get("WORLD_SIZE", 1))
+    # max_steps = math.ceil(total_training_samples / total_batch_size)
+    # print(f"total_training_samples:{total_training_samples},total_batch_size:{total_batch_size},max_steps:{max_steps}, args.num_train_epochs:{args.num_train_epochs}")
+    # print(int(os.environ.get("WORLD_SIZE", 1)))
 
     # 配置训练参数
     training_args = TrainingArguments(
@@ -292,9 +293,10 @@ def main():
         per_device_eval_batch_size=args.eval_batch_size,
         do_train=True,
         do_eval=True,
-        evaluation_strategy="epoch",
         logging_steps=args.logging_steps,
         save_strategy="epoch",
+        evaluation_strategy="epoch",
+        num_train_epochs = args.num_train_epochs,
         overwrite_output_dir=True,
         local_rank=int(os.environ.get("LOCAL_RANK", -1)),
         learning_rate=args.learning_rate,
@@ -313,6 +315,7 @@ def main():
     )
 
     trainer.train()
+    trainer.save_model(os.path.join(args.output_dir,"best_model"))
 
     
 
