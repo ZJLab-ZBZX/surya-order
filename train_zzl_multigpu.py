@@ -232,7 +232,6 @@ def parse_args():
     
     # 训练参数
     parser.add_argument("--num_train_epochs", type=int, default=30, help="训练epoch数")
-    # parser.add_argument("--eval_steps", type=int, default=10, help="评估步数")
     parser.add_argument("--train_batch_size", type=int, default=10, help="训练批次大小")
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="学习率")
     parser.add_argument("--output_dir", type=str, required=True, help="输出目录")
@@ -278,13 +277,6 @@ def main():
         order_dir=args.eval_order_dir
     )
 
-    # 计算训练参数
-    # train_file_lines = len(train_dataset)
-    # total_training_samples = train_file_lines * args.num_train_epochs
-    # total_batch_size = args.train_batch_size * int(os.environ.get("WORLD_SIZE", 1))
-    # max_steps = math.ceil(total_training_samples / total_batch_size)
-    # print(f"total_training_samples:{total_training_samples},total_batch_size:{total_batch_size},max_steps:{max_steps}, args.num_train_epochs:{args.num_train_epochs}")
-    # print(int(os.environ.get("WORLD_SIZE", 1)))
 
     # 配置训练参数
     training_args = TrainingArguments(
@@ -302,8 +294,9 @@ def main():
         learning_rate=args.learning_rate,
         metric_for_best_model="eval_loss",
         fp16=True,
-        # max_steps=max_steps,
-        dataloader_num_workers=args.dataloader_num_workers
+        dataloader_num_workers=args.dataloader_num_workers,
+        save_total_limit=10,
+        load_best_model_at_end=True
     )
     print(f"训练参数:{training_args}")
     trainer = ReadingOrderTrainer(
@@ -315,10 +308,13 @@ def main():
     )
 
     trainer.train()
-    trainer.save_model(os.path.join(args.output_dir,"best_model"))
+    print("训练完成")
+    model_path = os.path.join(args.output_dir,"best_model")
+    trainer.save_model(model_path)
+    print(f"保存模型至{model_path}")
 
     
 
 if __name__ == "__main__":
     main()
-    # 命令行执行：python -m torch.distributed.launch --nproc_per_node=4 train_zzl_multigpu.py
+    # 命令行执行：python -m torch.distributed.launch  --nproc_per_node=${TQ_GPU_NUM} --nnodes=${WORLD_SIZE} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} --use_env train_zzl_multigpu.py --checkpoint=/mnt/si001713netl/suryaorder/models/surya_order --train_image_dir=/mnt/si001713netl/suryaorder/datasets --eval_image_dir=/mnt/si001713netl/suryaorder/datasets --output_dir=/mnt/si001713netl/suryaorder/outputs
