@@ -302,7 +302,7 @@ def main():
         learning_rate=args.learning_rate,
         metric_for_best_model="eval_loss",
         fp16=True,
-        max_steps=max_steps,
+        # max_steps=max_steps,
         dataloader_num_workers=args.dataloader_num_workers
     )
     print(f"训练参数:{training_args}，训练数据集数量:{train_file_lines}")
