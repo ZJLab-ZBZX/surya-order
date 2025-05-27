@@ -282,6 +282,7 @@ def main():
     total_training_samples = train_file_lines * args.num_train_epochs
     total_batch_size = args.train_batch_size * int(os.environ.get("WORLD_SIZE", 1))
     max_steps = math.ceil(total_training_samples / total_batch_size)
+    print(f"total_training_samples:{total_training_samples},total_batch_size:{total_batch_size},max_steps:{max_steps}, int(os.environ.get("WORLD_SIZE", 1):{int(os.environ.get("WORLD_SIZE", 1)},args.num_train_epochs:{args.num_train_epochs}")
 
     # 配置训练参数
     training_args = TrainingArguments(
