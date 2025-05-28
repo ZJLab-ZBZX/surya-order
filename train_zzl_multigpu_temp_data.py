@@ -281,7 +281,7 @@ def main():
         metric_for_best_model="eval_loss",
         fp16=True,
         dataloader_num_workers=args.dataloader_num_workers,
-        save_total_limit=10,
+        save_total_limit=30,
         load_best_model_at_end=True
     )
     print(f"训练参数:{training_args}")
