@@ -17,21 +17,20 @@ from typing import List, Dict
 from datasets import Dataset as HFDataset
 import torch.nn as nn
 from transformers import Trainer
-import math
 import argparse
+import json
 
 class ReadingOrderDataset(Dataset):    
-    def __init__(self,image_dir,bbox_dir,order_dir):
+    def __init__(self,image_dir,json_dir):
         super().__init__()  
         
         # 目录校验
-        for dir_path in [image_dir, bbox_dir, order_dir]:
+        for dir_path in [image_dir, json_dir]:
             if not os.path.isdir(dir_path):
                 raise ValueError(f"目录不存在: {dir_path}")
         # 初始化类属性
         self.image_dir = image_dir
-        self.bbox_dir = bbox_dir
-        self.order_dir = order_dir
+        self.json_dir = json_dir
         
         # 构建样本索引
         self.samples = self._build_sample_list()
@@ -54,23 +53,17 @@ class ReadingOrderDataset(Dataset):
             base_name = os.path.splitext(img_file)[0]
             
             # 构建完整路径
-            bbox_path = os.path.join(self.bbox_dir, f"{base_name}.npy")
-            order_path = os.path.join(self.order_dir, f"{base_name}.txt")
+            json_path = os.path.join(self.json_dir, f"{base_name}.json")
             image_path = os.path.join(self.image_dir, img_file)
             
             # 验证文件存在性
-            if all(os.path.exists(p) for p in [bbox_path, order_path]):
+            if os.path.exists(json_path):
                 samples.append({
                     "image_path": image_path,
-                    "bbox_path": bbox_path,
-                    "order_path": order_path,
+                    "json_path": json_path
                 })
             else:
-                missing_files = [
-                    p for p in [bbox_path, order_path] 
-                    if not os.path.exists(p)
-                ]
-                print(f"忽略不完整样本 {img_file}，缺失文件: {', '.join(missing_files)}")
+                print(f"忽略不完整样本 {img_file}，缺失文件: {json_path}")
         return samples
     
     def _create_hf_dataset(self) -> HFDataset:
@@ -86,12 +79,12 @@ class ReadingOrderDataset(Dataset):
         example = self.hf_dataset[idx]
         try:
             image = Image.open(example["image_path"]).convert("RGB")
-            bboxes = np.load(example["bbox_path"], allow_pickle=True).tolist()
-            
-            with open(example["order_path"], "r") as f:
-                raw_order = f.read().strip().strip('[]')
-                target_order = [int(x) for x in raw_order.split(',')]
-            return [image,bboxes,target_order] #如果返回dict，会走到trainer()底层的过滤逻辑
+            with open(example["json_path"], 'r') as f:
+                json_data = json.load(f)
+
+            xyxy_bboxes = json_data['bboxes']
+            target_order = json_data.get('mathpix_order_fix')
+            return [image,xyxy_bboxes,target_order] #如果返回dict，会走到trainer()底层的过滤逻辑
         except Exception as e:
             print(f"加载样本失败，样本信息：{str(example)} : {str(e)}")
             return None
@@ -223,11 +216,9 @@ def parse_args():
     
     # 数据路径参数
     parser.add_argument("--train_image_dir", type=str, required=True, help="训练图像目录")
-    parser.add_argument("--train_bbox_dir", type=str, help="训练边界框目录")
-    parser.add_argument("--train_order_dir", type=str,help="训练顺序标注目录")
+    parser.add_argument("--train_json_dir", type=str, help="训练边界框目录")
     parser.add_argument("--eval_image_dir", type=str, required=True, help="评估图像目录")
-    parser.add_argument("--eval_bbox_dir", type=str,help="评估边界框目录")
-    parser.add_argument("--eval_order_dir", type=str,help="评估顺序标注目录")
+    parser.add_argument("--eval_json_dir", type=str,help="评估边界框目录")
     
     # 训练参数
     parser.add_argument("--num_train_epochs", type=int, default=30, help="训练epoch数")
@@ -260,20 +251,16 @@ def main():
     )
 
     # 数据集准备
-    args.train_bbox_dir = args.train_bbox_dir or args.train_image_dir
-    args.train_order_dir = args.train_order_dir or args.train_image_dir
-    args.eval_bbox_dir = args.eval_bbox_dir or args.eval_image_dir
-    args.eval_order_dir = args.eval_order_dir or args.eval_image_dir
+    args.train_json_dir = args.train_json_dir or args.train_image_dir
+    args.eval_json_dir = args.eval_json_dir or args.eval_image_dir
     train_dataset = ReadingOrderDataset(
         image_dir=args.train_image_dir,
-        bbox_dir=args.train_bbox_dir,
-        order_dir=args.train_order_dir
+        json_dir=args.train_json_dir
     )
     
     eval_dataset = ReadingOrderDataset(
         image_dir=args.eval_image_dir,
-        bbox_dir=args.eval_bbox_dir,
-        order_dir=args.eval_order_dir
+        eval_json_dir=args.eval_json_dir
     )
 
 
