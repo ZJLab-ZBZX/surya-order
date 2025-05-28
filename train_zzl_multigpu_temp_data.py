@@ -260,7 +260,7 @@ def main():
     
     eval_dataset = ReadingOrderDataset(
         image_dir=args.eval_image_dir,
-        eval_json_dir=args.eval_json_dir
+        json_dir=args.eval_json_dir
     )
 
 
