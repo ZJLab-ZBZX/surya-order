@@ -21,17 +21,14 @@ import math
 import argparse
 
 class ReadingOrderDataset(Dataset):    
-    def __init__(self,image_dir,bbox_dir,order_dir):
+    def __init__(self,train_dir):
         super().__init__()  
         
         # 目录校验
-        for dir_path in [image_dir, bbox_dir, order_dir]:
-            if not os.path.isdir(dir_path):
-                raise ValueError(f"目录不存在: {dir_path}")
+        if not os.path.isdir(train_dir):
+            raise ValueError(f"目录不存在: {train_dir}")
         # 初始化类属性
-        self.image_dir = image_dir
-        self.bbox_dir = bbox_dir
-        self.order_dir = order_dir
+        self.train_dir = train_dir
         
         # 构建样本索引
         self.samples = self._build_sample_list()
@@ -45,7 +42,7 @@ class ReadingOrderDataset(Dataset):
         
         # 扫描图像文件 (支持.jpg, .png, .jpeg)
         image_files = [
-            f for f in os.listdir(self.image_dir) 
+            f for f in os.listdir(self.train_dir) 
             if f.lower().endswith(('.jpg', '.png', '.jpeg'))
         ]
         
@@ -54,9 +51,9 @@ class ReadingOrderDataset(Dataset):
             base_name = os.path.splitext(img_file)[0]
             
             # 构建完整路径
-            bbox_path = os.path.join(self.bbox_dir, f"{base_name}.npy")
-            order_path = os.path.join(self.order_dir, f"{base_name}.txt")
-            image_path = os.path.join(self.image_dir, img_file)
+            bbox_path = os.path.join(self.train_dir, f"{base_name}.npy")
+            order_path = os.path.join(self.train_dir, f"{base_name}.npy")
+            image_path = os.path.join(self.train_dir, img_file)
             
             # 验证文件存在性
             if all(os.path.exists(p) for p in [bbox_path, order_path]):
@@ -87,10 +84,7 @@ class ReadingOrderDataset(Dataset):
         try:
             image = Image.open(example["image_path"]).convert("RGB")
             bboxes = np.load(example["bbox_path"], allow_pickle=True).tolist()
-            
-            with open(example["order_path"], "r") as f:
-                raw_order = f.read().strip().strip('[]')
-                target_order = [int(x) for x in raw_order.split(',')]
+            target_order = np.load(example["order_path"], allow_pickle=True).tolist()
             return [image,bboxes,target_order] #如果返回dict，会走到trainer()底层的过滤逻辑
         except Exception as e:
             print(f"加载样本失败，样本信息：{str(example)} : {str(e)}")
@@ -222,12 +216,8 @@ def parse_args():
     parser.add_argument("--max_tokens", type=int, default=256, help="最大token数")
     
     # 数据路径参数
-    parser.add_argument("--train_image_dir", type=str, required=True, help="训练图像目录")
-    parser.add_argument("--train_bbox_dir", type=str, help="训练边界框目录")
-    parser.add_argument("--train_order_dir", type=str,help="训练顺序标注目录")
-    parser.add_argument("--eval_image_dir", type=str, required=True, help="评估图像目录")
-    parser.add_argument("--eval_bbox_dir", type=str,help="评估边界框目录")
-    parser.add_argument("--eval_order_dir", type=str,help="评估顺序标注目录")
+    parser.add_argument("--train_dir", type=str, required=True, help="训练数据目录")
+    parser.add_argument("--eval_dir", type=str,help="评估数据目录")
     
     # 训练参数
     parser.add_argument("--num_train_epochs", type=int, default=30, help="训练epoch数")
@@ -260,20 +250,12 @@ def main():
     )
 
     # 数据集准备
-    args.train_bbox_dir = args.train_bbox_dir or args.train_image_dir
-    args.train_order_dir = args.train_order_dir or args.train_image_dir
-    args.eval_bbox_dir = args.eval_bbox_dir or args.eval_image_dir
-    args.eval_order_dir = args.eval_order_dir or args.eval_image_dir
     train_dataset = ReadingOrderDataset(
-        image_dir=args.train_image_dir,
-        bbox_dir=args.train_bbox_dir,
-        order_dir=args.train_order_dir
+        train_dir=args.train_dir
     )
     
     eval_dataset = ReadingOrderDataset(
-        image_dir=args.eval_image_dir,
-        bbox_dir=args.eval_bbox_dir,
-        order_dir=args.eval_order_dir
+        eval_dir=args.eval_dir
     )
 
 
